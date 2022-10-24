@@ -8,7 +8,7 @@
 Kafka Consumer Side Offset Store is a Java library to assist storing the consumer group offsets on the consumer application side instead of __consumer_groups on the Kafka cluster.
 This allows the Kafka consumer applications to more easily achieve exactly-once message processing by atomically updating both the offsets and the consumption result using a transaction.
 
-[image]
+![summary](https://user-images.githubusercontent.com/27920264/197582743-c465eff7-8ade-4ed5-9e21-a0494c56e279.png)
 
 Kafka Consumer Side Offset Store provides several templates to implement the required functions for storing the consumer group offsets on the consumer application side while achieving high quality and ease.
 Several solutions are provided:
@@ -146,7 +146,7 @@ Kafka Consumer Side Offset Store listens the consumer re-balance events using Co
 
 The following sequence diagram indicates main flow, and it excludes exception flow such as leaving the ConsumerGroup due to timeout or other reasons:
 
-[image]
+![sequencediagram](https://user-images.githubusercontent.com/27920264/197583148-2b2bcf3b-2b54-4e42-8b71-65630acad5f1.png)
 
 #### Kafka Consumer Side Offset Store accesses to private fields in KafkaConsumer internally
 Unfortunately, Kafka Consumer Side Offset Store accesses to the following private fields in KafkaConsumer internally, to get status and times for zombie fencing feature.

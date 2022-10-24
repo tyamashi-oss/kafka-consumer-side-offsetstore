@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~     Copyright org.tyamashi authors.
+  ~     License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
+  -->
+
+<Configuration status="warn">
+    <Appenders>
+        <!-- Console appender configuration -->
+        <Console name="console" target="SYSTEM_OUT">
+            <PatternLayout
+                    pattern="%d{yyyy-MM-dd HH:mm:ss} %-5p %c{1}:%L - %m%n" />
+        </Console>
+    </Appenders>
+    <Loggers>
+        <!-- Root logger referring to console appender -->
+        <Root level="info" additivity="false">
+            <AppenderRef ref="console" />
+        </Root>
+        <Logger name="org.apache.zookeeper" level="warn"></Logger>A
+        <Logger name="state.change.logger" level="warn"></Logger>
+        <Logger name="org.apache.kafka" level="warn"></Logger>
+        <Logger name="kafka" level="warn"></Logger>
+        <Logger name="org.tyamashi" level="debug"></Logger>
+    </Loggers>
+</Configuration>

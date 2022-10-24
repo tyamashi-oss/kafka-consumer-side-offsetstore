@@ -1,0 +1,10 @@
+.idea/
+*.iml
+target/
+.project
+.classpath
+.settings/**/*.*
+kafka-consumer-side-offset-store-core/.settings/**/*.*
+kafka-consumer-side-offset-store-jdbc/.settings/**/*.*
+kafka-consumer-side-offset-store-spring-jdbc/.settings/**/*.*
+**/testdb

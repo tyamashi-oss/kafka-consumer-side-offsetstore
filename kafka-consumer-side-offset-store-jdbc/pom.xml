@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~     Copyright org.tyamashi authors.
+  ~     License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
+  -->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.tyamashi</groupId>
+    <artifactId>kafka-consumer-side-offset-store-parent</artifactId>
+    <version>0.1-alpha-01-SNAPSHOT</version>
+  </parent>
+
+  <groupId>org.tyamashi</groupId>
+  <artifactId>kafka-consumer-side-offset-store-jdbc</artifactId>
+  <name>${project.groupId}:${project.artifactId}</name>
+  <version>0.1-alpha-01-SNAPSHOT</version>
+  <packaging>jar</packaging>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.tyamashi</groupId>
+      <artifactId>kafka-consumer-side-offset-store-core</artifactId>
+      <version>0.1-alpha-01-SNAPSHOT</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.tyamashi</groupId>
+      <artifactId>kafka-consumer-side-offset-store-core</artifactId>
+      <version>0.1-alpha-01-SNAPSHOT</version>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.awaitility</groupId>
+      <artifactId>awaitility</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+
+
+  </dependencies>
+</project>

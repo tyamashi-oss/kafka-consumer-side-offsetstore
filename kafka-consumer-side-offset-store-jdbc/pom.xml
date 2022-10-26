@@ -8,26 +8,26 @@
   <parent>
     <groupId>org.tyamashi</groupId>
     <artifactId>kafka-consumer-side-offset-store-parent</artifactId>
-    <version>0.1-alpha-01-SNAPSHOT</version>
+    <version>0.1-alpha-01</version>
   </parent>
 
   <groupId>org.tyamashi</groupId>
   <artifactId>kafka-consumer-side-offset-store-jdbc</artifactId>
   <name>${project.groupId}:${project.artifactId}</name>
-  <version>0.1-alpha-01-SNAPSHOT</version>
+  <version>0.1-alpha-01</version>
   <packaging>jar</packaging>
 
   <dependencies>
     <dependency>
       <groupId>org.tyamashi</groupId>
       <artifactId>kafka-consumer-side-offset-store-core</artifactId>
-      <version>0.1-alpha-01-SNAPSHOT</version>
+      <version>0.1-alpha-01</version>
     </dependency>
 
     <dependency>
       <groupId>org.tyamashi</groupId>
       <artifactId>kafka-consumer-side-offset-store-core</artifactId>
-      <version>0.1-alpha-01-SNAPSHOT</version>
+      <version>0.1-alpha-01</version>
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>

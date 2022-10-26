@@ -12,18 +12,18 @@
     <parent>
         <groupId>org.tyamashi</groupId>
         <artifactId>kafka-consumer-side-offset-store-examples</artifactId>
-        <version>0.1-alpha-01-SNAPSHOT</version>
+        <version>0.1-alpha-01</version>
     </parent>
 
     <groupId>org.tyamashi</groupId>
     <artifactId>kafka-consumer-side-offset-store-examples-core</artifactId>
-    <version>0.1-alpha-01-SNAPSHOT</version>
+    <version>0.1-alpha-01</version>
 
     <dependencies>
         <dependency>
             <groupId>org.tyamashi</groupId>
             <artifactId>kafka-consumer-side-offset-store-core</artifactId>
-            <version>0.1-alpha-01-SNAPSHOT</version>
+            <version>0.1-alpha-01</version>
         </dependency>
         <dependency>
             <groupId>org.xerial</groupId>

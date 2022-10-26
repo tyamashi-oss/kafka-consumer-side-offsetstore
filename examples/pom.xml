@@ -12,12 +12,12 @@
     <parent>
         <groupId>org.tyamashi</groupId>
         <artifactId>kafka-consumer-side-offset-store-parent</artifactId>
-        <version>0.1-alpha-01-SNAPSHOT</version>
+        <version>0.1-alpha-01</version>
     </parent>
 
     <groupId>org.tyamashi</groupId>
     <artifactId>kafka-consumer-side-offset-store-examples</artifactId>
-    <version>0.1-alpha-01-SNAPSHOT</version>
+    <version>0.1-alpha-01</version>
     <packaging>pom</packaging>
 
     <modules>

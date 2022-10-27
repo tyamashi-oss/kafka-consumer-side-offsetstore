@@ -21,6 +21,6 @@
         <Logger name="state.change.logger" level="warn"></Logger>
         <Logger name="org.apache.kafka" level="warn"></Logger>
         <Logger name="kafka" level="warn"></Logger>
-        <Logger name="org.tyamashi" level="debug"></Logger>
+        <Logger name="org.tyamashi" level="trace"></Logger>
     </Loggers>
 </Configuration>

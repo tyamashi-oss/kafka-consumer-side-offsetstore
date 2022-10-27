@@ -20,7 +20,7 @@ jobs:
       - name: Build with Maven
         run: mvn --batch-mode --update-snapshots package -DskipTests
 
-      - name: Test
+      - name: Test (and coverage prepare-agent)
         run: mvn --batch-mode jacoco:prepare-agent -Dmaven.test.failure.ignore=true test
 
       - name: Test Report
@@ -32,7 +32,10 @@ jobs:
           reporter: java-junit
           fail-on-error: true
 
-      - name: Coverage Report
+      - name: Coverage Report 1
+        run: mvn jacoco:report 
+
+      - name: Coverage Report 2
         id: jacoco
         uses: madrapps/jacoco-report@v1.3
         with:

@@ -20,10 +20,10 @@ jobs:
       - name: Build with Maven
         run: mvn --batch-mode --update-snapshots package -DskipTests
 
-      - name: Test
-        run: mvn --batch-mode -Dmaven.test.failure.ignore=true test
+      - name: Test (and coverage prepare-agent)
+        run: mvn --batch-mode jacoco:prepare-agent -Dmaven.test.failure.ignore=true test
 
-      - name: Report
+      - name: Test Report
         uses: dorny/test-reporter@v1
         if: always()
         with:
@@ -31,6 +31,18 @@ jobs:
           path: kafka-consumer-side-offset-store-core/target/surefire-reports/*.xml
           reporter: java-junit
           fail-on-error: true
+
+      - name: Coverage Report 1
+        run: mvn jacoco:report 
+
+      - name: Coverage Report 2
+        id: jacoco
+        uses: madrapps/jacoco-report@v1.3
+        with:
+          paths: ${{ github.workspace }}/kafka-consumer-side-offset-store-core/target/site/jacoco/jacoco.xml
+          token: ${{ secrets.GITHUB_TOKEN }}
+          min-coverage-overall: 40
+          min-coverage-changed-files: 60
 
       # Optional: Uploads the full dependency graph to GitHub to improve the quality of Dependabot alerts this repository can receive
       - name: Update dependency graph

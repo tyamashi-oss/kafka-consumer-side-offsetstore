@@ -31,10 +31,12 @@ Several solutions are provided:
 ```xml
 <dependency>
     <groupId>org.tyamashi</groupId>
-    <artifactId>kafka-consumer-side-offsetstore-core</artifactId>
+    <artifactId>kafka-consumer-side-offset-store-core</artifactId>
     <version>VERSION</version>
 </dependency>
 ```
+Available versions can be found here: https://mvnrepository.com/artifact/org.tyamashi/kafka-consumer-side-offset-store-core.
+
 
 ### Usage
 
@@ -211,9 +213,9 @@ However, as a reality, it may be difficult to determine transactional.id.
 
 [Apache 2.0 License](./LICENSE).
 
-[ci-img]: https://travis-ci.org/kafka-consumer-side-offsetstore/kafka-consumer-side-offsetstore-core.svg?branch=main
-[ci]: https://travis-ci.org/kafka-consumer-side-offsetstore/kafka-consumer-side-offsetstore-core
-[cov-img]: https://coveralls.io/repos/github/kafka-consumer-side-offsetstore/kafka-consumer-side-offsetstore-core/badge.svg?branch=main
-[cov]: https://coveralls.io/github/kafka-consumer-side-offsetstore/kafka-consumer-side-offsetstore-core?branch=main
-[maven-img]: https://img.shields.io/maven-central/v/kafka-consumer-side-offsetstore/kafka-consumer-side-offsetstore-core.svg
-[maven]: http://search.maven.org/#search%7Cga%7C1%7Ckafka-consumer-side-offsetstore-core
+[ci-img]: https://travis-ci.org/kafka-consumer-side-offset-store/kafka-consumer-side-offset-store-core.svg?branch=main
+[ci]: https://travis-ci.org/kafka-consumer-side-offset-store/kafka-consumer-side-offset-store-core
+[cov-img]: https://coveralls.io/repos/github/kafka-consumer-side-offset-store/kafka-consumer-side-offset0store-core/badge.svg?branch=main
+[cov]: https://coveralls.io/github/kafka-consumer-side-offset-store/kafka-consumer-side-offset0store-core?branch=main
+[maven-img]: https://img.shields.io/maven-metadata/v.svg?label=maven-central&metadataUrl=https%3A%2F%2Frepo1.maven.org%2Fmaven2%2Forg%2Ftyamashi%2Fkafka-consumer-side-offset-store-core%2Fmaven-metadata.xml
+[maven]: http://search.maven.org/#search%7Cga%7C1%7Ckafka-consumer-side-offset-store-core

@@ -19,8 +19,8 @@
         </Root>
         <Logger name="org.apache.zookeeper" level="warn"></Logger>A
         <Logger name="state.change.logger" level="warn"></Logger>
-        <Logger name="org.apache.kafka" level="debug"></Logger>
-        <Logger name="kafka" level="debug"></Logger>
-        <Logger name="org.tyamashi" level="debug"></Logger>
+        <Logger name="org.apache.kafka" level="info"></Logger>
+        <Logger name="kafka" level="info"></Logger>
+        <Logger name="org.tyamashi" level="info"></Logger>
     </Loggers>
 </Configuration>

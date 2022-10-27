@@ -3,8 +3,6 @@
 
 # Kafka Consumer Side Offset Store
 
-> Caution: This project is in incubation, and is published for personal interest, so this library doesn't have sufficient quality yet.
-
 Kafka Consumer Side Offset Store is a Java library to assist storing the consumer group offsets on the consumer application side instead of __consumer_groups on the Kafka cluster.
 This allows the Kafka consumer applications to more easily achieve exactly-once message processing by atomically updating both the offsets and the consumption result using a transaction.
 
@@ -15,6 +13,8 @@ Several solutions are provided:
 1. Based on ConsumerSideOffsetStoreHandler template, which is the most core template available for all types of application.
 1. [TBD] Based on relational database offset store template, which is a more JDBC specific template.
 1. [TBD] Based on Kafka offset store template, which is a more Kafka specific template.
+
+> Caution: This project is in incubation, and is published for personal interest, so this library doesn't have sufficient quality yet.
 
 ## Requirements
 - Java 8+

@@ -148,7 +148,7 @@ Kafka Consumer Side Offset Store listens the consumer re-balance events using Co
 
 The following sequence diagram indicates main flow, and it excludes exception flow such as leaving the ConsumerGroup due to timeout or other reasons:
 
-![sequencediagram](https://user-images.githubusercontent.com/27920264/197583148-2b2bcf3b-2b54-4e42-8b71-65630acad5f1.png)
+![sequencediagram](https://user-images.githubusercontent.com/27920264/198677164-19cb4553-47bf-40f7-ac59-02b2fd79522c.png)
 
 #### Kafka Consumer Side Offset Store accesses to private fields in KafkaConsumer internally
 Unfortunately, Kafka Consumer Side Offset Store accesses to the following private fields in KafkaConsumer internally, to get status and times for zombie fencing feature.

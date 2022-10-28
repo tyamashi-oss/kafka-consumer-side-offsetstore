@@ -213,8 +213,8 @@ However, as a reality, it may be difficult to determine transactional.id.
 
 [Apache 2.0 License](./LICENSE).
 
-[ci-img]: https://travis-ci.org/kafka-consumer-side-offset-store/kafka-consumer-side-offset-store-core.svg?branch=main
-[ci]: https://travis-ci.org/kafka-consumer-side-offset-store/kafka-consumer-side-offset-store-core
+[ci-img]: https://img.shields.io/github/workflow/status/tyamashi-oss/kafka-consumer-side-offsetstore/Java%20CI/main 
+[ci]: https://github.com/tyamashi-oss/kafka-consumer-side-offsetstore/actions/workflows/javaci.yaml
 [cov-img]: https://coveralls.io/repos/github/kafka-consumer-side-offset-store/kafka-consumer-side-offset0store-core/badge.svg?branch=main
 [cov]: https://coveralls.io/github/kafka-consumer-side-offset-store/kafka-consumer-side-offset0store-core?branch=main
 [maven-img]: https://img.shields.io/maven-metadata/v.svg?label=maven-central&metadataUrl=https%3A%2F%2Frepo1.maven.org%2Fmaven2%2Forg%2Ftyamashi%2Fkafka-consumer-side-offset-store-core%2Fmaven-metadata.xml

@@ -36,7 +36,6 @@ jobs:
         run: mvn jacoco:report 
 
       - name: Coverage Report 2
-        id: jacoco
         uses: madrapps/jacoco-report@v1.3
         with:
           paths: ${{ github.workspace }}/kafka-consumer-side-offset-store-core/target/site/jacoco/jacoco.xml

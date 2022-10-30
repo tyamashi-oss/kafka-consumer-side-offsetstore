@@ -13,4 +13,8 @@ public class OffsetStoreValidationException extends OffsetStoreException {
     public OffsetStoreValidationException(String message) {
         super(message);
     }
+
+    public OffsetStoreValidationException(String message, Exception e) {
+        super(message, e);
+    }
 }

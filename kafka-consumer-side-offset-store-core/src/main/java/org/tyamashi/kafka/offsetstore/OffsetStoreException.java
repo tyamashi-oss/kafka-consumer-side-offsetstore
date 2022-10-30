@@ -15,4 +15,8 @@ public class OffsetStoreException extends RuntimeException {
     public OffsetStoreException(String message) {
         super(message);
     }
+    public OffsetStoreException(String message, Exception e) {
+        super(message, e);
+    }
+
 }

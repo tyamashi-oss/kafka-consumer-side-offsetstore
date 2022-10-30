@@ -12,7 +12,7 @@ import java.util.List;
  */
 public class MockAppender extends AbstractAppender {
 
-    List<LogEvent> messages = new ArrayList<LogEvent>();
+    List<String> messages = new ArrayList<String>();
 
     protected MockAppender() {
         super("MockAppender", null, null, true, Property.EMPTY_ARRAY);
@@ -21,10 +21,10 @@ public class MockAppender extends AbstractAppender {
 
     @Override
     public void append(LogEvent event) {
-        messages.add(event);
+        messages.add(event.getMessage().getFormattedMessage());
     }
 
     public boolean isMessageIncluded(String message) {
-        return messages.stream().anyMatch(a -> { return a.getMessage().getFormattedMessage().indexOf(message) > -1;});
+        return messages.stream().anyMatch(a -> a != null ? a.indexOf(message) > -1 : false );
     }
 }

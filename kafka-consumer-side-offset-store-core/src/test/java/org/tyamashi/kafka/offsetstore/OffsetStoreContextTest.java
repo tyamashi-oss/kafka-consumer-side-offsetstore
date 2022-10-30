@@ -11,9 +11,7 @@ import org.apache.kafka.clients.consumer.internals.NoOpConsumerRebalanceListener
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.TopicPartition;
-import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.core.LogEvent;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -42,8 +40,6 @@ public class OffsetStoreContextTest {
     @Autowired
     private EmbeddedKafkaBroker embeddedKafkaBroker;
 
-//    private static final Logger logger = LoggerFactory.getLogger(OffsetStoreContext.class);
-
     public static final String GROUP = "my-group";
     public final static int PARTITION = 5;
 
@@ -58,7 +54,6 @@ public class OffsetStoreContextTest {
         mockedAppender = new MockAppender();
         org.apache.logging.log4j.core.Logger logger = (org.apache.logging.log4j.core.Logger)LogManager.getLogger(OffsetStoreContext.class);
         logger.addAppender(mockedAppender);
-        logger.setLevel(Level.INFO);
     }
 
     @AfterAll
@@ -66,16 +61,6 @@ public class OffsetStoreContextTest {
         org.apache.logging.log4j.core.Logger logger = (org.apache.logging.log4j.core.Logger)LogManager.getLogger(OffsetStoreContext.class);
         logger.removeAppender(mockedAppender);
     }
-
-    @Test
-    public void test() {
-        // do something that causes logs
-        for (LogEvent e : mockedAppender.messages) {
-            System.out.println(e);
-            // add asserts for the log messages
-        }
-    }
-
 
     @Test
     public void testSimple() throws Exception {

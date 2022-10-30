@@ -1,8 +1,4 @@
-[![Build Status][ci-img]][ci] [![Coverage Status][cov-img]][cov] [![Released Version][maven-img]][maven] [![Apache-2.0 license](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-
-![Coverage](.github/badges/jacoco.svg)
-
-[![Coverage](.github/badges/jacoco.svg)]
+[![Released Version][maven-img]][maven] [![Build Status][ci-img]][ci] ![Coverage](.github/badges/jacoco.svg) [![Apache-2.0 license](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 # Kafka Consumer Side Offset Store
 
@@ -218,7 +214,5 @@ However, as a reality, it may be difficult to determine transactional.id.
 
 [ci-img]: https://img.shields.io/github/workflow/status/tyamashi-oss/kafka-consumer-side-offsetstore/Java%20CI/main 
 [ci]: https://github.com/tyamashi-oss/kafka-consumer-side-offsetstore/actions/workflows/javaci.yaml
-[cov-img]: https://coveralls.io/repos/github/kafka-consumer-side-offset-store/kafka-consumer-side-offset0store-core/badge.svg?branch=main
-[cov]: https://coveralls.io/github/kafka-consumer-side-offset-store/kafka-consumer-side-offset0store-core?branch=main
 [maven-img]: https://img.shields.io/maven-metadata/v.svg?label=maven-central&metadataUrl=https%3A%2F%2Frepo1.maven.org%2Fmaven2%2Forg%2Ftyamashi%2Fkafka-consumer-side-offset-store-core%2Fmaven-metadata.xml
 [maven]: http://search.maven.org/#search%7Cga%7C1%7Ckafka-consumer-side-offset-store-core

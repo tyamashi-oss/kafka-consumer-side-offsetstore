@@ -7,26 +7,29 @@ package org.tyamashi.kafka.offsetstore;
 
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.consumer.*;
+import org.apache.kafka.clients.consumer.internals.NoOpConsumerRebalanceListener;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.TopicPartition;
+import org.apache.logging.log4j.LogManager;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.test.EmbeddedKafkaBroker;
 import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.kafka.test.utils.KafkaTestUtils;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.tyamashi.kafka.offsetstore.internals.NoOpConsumerSideOffsetStoreHandler;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
+import java.time.Duration;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -37,10 +40,27 @@ public class OffsetStoreContextTest {
     @Autowired
     private EmbeddedKafkaBroker embeddedKafkaBroker;
 
-    private static final Logger logger = LoggerFactory.getLogger(OffsetStoreContext.class);
-
     public static final String GROUP = "my-group";
     public final static int PARTITION = 5;
+
+    private static MockAppender mockedAppender;
+
+    public void setup() {
+        mockedAppender.messages.clear();
+    }
+
+    @BeforeAll
+    public static void setupClass() {
+        mockedAppender = new MockAppender();
+        org.apache.logging.log4j.core.Logger logger = (org.apache.logging.log4j.core.Logger)LogManager.getLogger(OffsetStoreContext.class);
+        logger.addAppender(mockedAppender);
+    }
+
+    @AfterAll
+    public static void teardown() {
+        org.apache.logging.log4j.core.Logger logger = (org.apache.logging.log4j.core.Logger)LogManager.getLogger(OffsetStoreContext.class);
+        logger.removeAppender(mockedAppender);
+    }
 
     @Test
     public void testSimple() throws Exception {
@@ -466,4 +486,133 @@ public class OffsetStoreContextTest {
         SimpleJdbcTestUtils.assertOffsets(this.embeddedKafkaBroker, GROUP, assetOffsets);
 
     }
+
+    @Test
+    public void testSubscribeOverrideMethods() throws Throwable {
+        SimpleJdbcTestUtils.initializeDatabase();
+
+        String topicName = new Object() {
+        }.getClass().getEnclosingMethod().getName().toLowerCase(Locale.ROOT);
+        this.embeddedKafkaBroker.addTopics(topicName);
+
+        int messageCount = 50;
+
+        KafkaProducer<Integer, Integer> producer = TestUtils.getSimpleKafkaProducer(embeddedKafkaBroker);
+        for (int i = 0; i < messageCount; ++i) {
+            producer.send(new ProducerRecord<Integer, Integer>(topicName, i % PARTITION, i)).get();
+        }
+        producer.close();
+
+        final Map<String, Object> consumerProps = KafkaTestUtils
+                .consumerProps(GROUP, "false", embeddedKafkaBroker);
+        consumerProps.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
+        consumerProps.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+
+        Map<String, Object> offsetStoreProps = new HashMap<>();
+
+        Map<TopicPartition, OffsetAndMetadata> initializeOffsets = new HashMap<TopicPartition, OffsetAndMetadata>();
+        initializeOffsets.put(new TopicPartition(topicName, 0), new OffsetAndMetadata(0));
+        initializeOffsets.put(new TopicPartition(topicName, 1), new OffsetAndMetadata(0));
+        initializeOffsets.put(new TopicPartition(topicName, 2), new OffsetAndMetadata(0));
+        initializeOffsets.put(new TopicPartition(topicName, 3), new OffsetAndMetadata(0));
+        initializeOffsets.put(new TopicPartition(topicName, 4), new OffsetAndMetadata(0));
+
+        try (KafkaConsumer<Integer, String> kafkaConsumer = new KafkaConsumer<>(consumerProps)) {
+            OffsetStoreContext offsetStoreContext = OffsetStoreContext.subscribe(offsetStoreProps, kafkaConsumer, Pattern.compile(topicName), new NoOpConsumerSideOffsetStoreHandler());
+            kafkaConsumer.poll(Duration.ofSeconds(5));
+            Assertions.assertEquals(kafkaConsumer.subscription().toArray()[0], topicName);
+        }
+
+        try (KafkaConsumer<Integer, String> kafkaConsumer = new KafkaConsumer<>(consumerProps)) {
+            OffsetStoreContext offsetStoreContext = OffsetStoreContext.subscribe(offsetStoreProps, kafkaConsumer, Collections.singletonList(topicName), new NoOpConsumerSideOffsetStoreHandler());
+            Assertions.assertEquals(kafkaConsumer.subscription().toArray()[0], topicName);
+        }
+
+        try (KafkaConsumer<Integer, String> kafkaConsumer = new KafkaConsumer<>(consumerProps)) {
+            OffsetStoreContext offsetStoreContext = OffsetStoreContext.subscribe(offsetStoreProps, kafkaConsumer, Pattern.compile(topicName), new NoOpConsumerRebalanceListener(), new NoOpConsumerSideOffsetStoreHandler());
+            kafkaConsumer.poll(Duration.ofSeconds(5));
+            Assertions.assertEquals(kafkaConsumer.subscription().toArray()[0], topicName);
+        }
+
+        try (KafkaConsumer<Integer, String> kafkaConsumer = new KafkaConsumer<>(consumerProps)) {
+            OffsetStoreContext offsetStoreContext = OffsetStoreContext.subscribe(offsetStoreProps, kafkaConsumer, Collections.singletonList(topicName), new NoOpConsumerRebalanceListener(), new NoOpConsumerSideOffsetStoreHandler());
+            Assertions.assertEquals(kafkaConsumer.subscription().toArray()[0], topicName);
+        }
+
+    }
+
+    @Test
+    public void testGroupIdNotSet() throws Throwable {
+        SimpleJdbcTestUtils.initializeDatabase();
+
+        String topicName = new Object() {
+        }.getClass().getEnclosingMethod().getName().toLowerCase(Locale.ROOT);
+        this.embeddedKafkaBroker.addTopics(topicName);
+
+        int messageCount = 50;
+
+        KafkaProducer<Integer, Integer> producer = TestUtils.getSimpleKafkaProducer(embeddedKafkaBroker);
+        for (int i = 0; i < messageCount; ++i) {
+            producer.send(new ProducerRecord<Integer, Integer>(topicName, i % PARTITION, i)).get();
+        }
+        producer.close();
+
+        final Map<String, Object> consumerProps = KafkaTestUtils
+                .consumerProps(GROUP, "false", embeddedKafkaBroker);
+        consumerProps.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
+        consumerProps.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+
+        // remove group.id
+        consumerProps.remove(ConsumerConfig.GROUP_ID_CONFIG);
+
+        Map<String, Object> offsetStoreProps = new HashMap<>();
+
+        try (KafkaConsumer<Integer, String> kafkaConsumer = new KafkaConsumer<>(consumerProps)) {
+            Assertions.assertThrows(OffsetStoreValidationException.class, () -> {
+                OffsetStoreContext offsetStoreContext = OffsetStoreContext.subscribe(offsetStoreProps, kafkaConsumer, Collections.singletonList(topicName), new NoOpConsumerSideOffsetStoreHandler());
+            });
+        }
+    }
+
+    @Test
+    public void testReturnUnassignedTopicPartitionFromLoadOffsets() throws Throwable {
+        SimpleJdbcTestUtils.initializeDatabase();
+
+        String topicName = new Object() {
+        }.getClass().getEnclosingMethod().getName().toLowerCase(Locale.ROOT);
+        this.embeddedKafkaBroker.addTopics(topicName);
+
+        int messageCount = 50;
+
+        KafkaProducer<Integer, Integer> producer = TestUtils.getSimpleKafkaProducer(embeddedKafkaBroker);
+        for (int i = 0; i < messageCount; ++i) {
+            producer.send(new ProducerRecord<Integer, Integer>(topicName, i % PARTITION, i)).get();
+        }
+        producer.close();
+
+        final Map<String, Object> consumerProps = KafkaTestUtils
+                .consumerProps(GROUP, "false", embeddedKafkaBroker);
+        consumerProps.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
+        consumerProps.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+
+        Map<String, Object> offsetStoreProps = new HashMap<>();
+
+        try (KafkaConsumer<Integer, String> kafkaConsumer = new KafkaConsumer<>(consumerProps)) {
+            OffsetStoreContext offsetStoreContext = OffsetStoreContext.subscribe(offsetStoreProps, kafkaConsumer, Collections.singletonList(topicName), new NoOpConsumerSideOffsetStoreHandler() {
+                @Override
+                public Map<TopicPartition, OffsetAndMetadata> loadOffsets(ConsumerGroupMetadata groupMetadata, Collection collection) throws Exception {
+                    HashMap<TopicPartition, OffsetAndMetadata> result = new HashMap<>();
+
+                    // return not assigned topicpartition offsets
+                    result.put(new TopicPartition("unknowntopic", 10), new OffsetAndMetadata(2, null));
+                    return result;
+                }
+            });
+            kafkaConsumer.poll(Duration.ofSeconds(5));
+        }
+
+        Assertions.assertTrue(mockedAppender.isMessageIncluded("The offsets for assigned TopicPartition cannot be found in your loadOffset results"));
+    }
+
+
 }

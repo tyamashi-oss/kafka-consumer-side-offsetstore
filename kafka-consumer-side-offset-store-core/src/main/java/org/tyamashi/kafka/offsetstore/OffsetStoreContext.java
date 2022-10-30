@@ -10,9 +10,10 @@ import org.apache.kafka.clients.consumer.internals.AbstractCoordinator;
 import org.apache.kafka.clients.consumer.internals.Heartbeat;
 import org.apache.kafka.clients.consumer.internals.NoOpConsumerRebalanceListener;
 import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.common.errors.InvalidGroupIdException;
 import org.apache.kafka.common.utils.Time;
-import org.apache.kafka.common.utils.Utils;
 import org.apache.kafka.common.utils.Timer;
+import org.apache.kafka.common.utils.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -198,9 +199,11 @@ public class OffsetStoreContext<TRANSACTIONALOBJECT> {
      * @param kafkaConsumer KafkaConsumer
      */
     private void validateConsumer(KafkaConsumer kafkaConsumer) {
-        // check KafkaConsumer properties
-        if (kafkaConsumer.groupMetadata() == null || kafkaConsumer.groupMetadata().groupId() == null) {
-            throw new OffsetStoreValidationException("The consumer group id should not be null [kafkaConsumer=" + kafkaConsumer + "]");
+        // check groupId
+        try {
+            kafkaConsumer.groupMetadata(); // if group.id is not set. InvalidGroupIdException will occur.
+        } catch (InvalidGroupIdException e) {
+            throw new OffsetStoreValidationException("The consumer group id should not be null [kafkaConsumer=" + kafkaConsumer + "]", e);
         }
     }
 

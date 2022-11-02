@@ -10,6 +10,7 @@ import org.apache.kafka.clients.consumer.*;
 import org.apache.kafka.clients.consumer.internals.NoOpConsumerRebalanceListener;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.KafkaException;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.logging.log4j.LogManager;
 import org.junit.jupiter.api.AfterAll;
@@ -320,12 +321,71 @@ public class OffsetStoreContextTest {
         Map<TopicPartition, OffsetAndMetadata> initializeOffsets = new HashMap<TopicPartition, OffsetAndMetadata>();
         initializeOffsets.put(new TopicPartition(topicName, 0), new OffsetAndMetadata(0));
 
-        List<Future> slowResults = TestUtils.consumeMessages(messageCount, GROUP, topicName, 1, consumerProps, offsetStoreProps, new SimpleJdbcTestUtils.ConnectionConsumerSideOffsetStoreHandler(initializeOffsets), SimpleJdbcTestUtils.getTransactioncontextHandler((connection) -> {
+        List<Future> slowResults = TestUtils.consumeMessages(messageCount, GROUP, topicName, 1, consumerProps, offsetStoreProps, new SimpleJdbcTestUtils.ConnectionConsumerSideOffsetStoreHandler(initializeOffsets), SimpleJdbcTestUtils.getTransactioncontextHandler((connection, kafkaConsumer) -> {
             try {
                 Thread.sleep(10000);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
+        }), 0, false);
+
+        List<Future> normalResults = TestUtils.consumeMessages(messageCount, GROUP, topicName, 5, consumerProps, offsetStoreProps, new SimpleJdbcTestUtils.ConnectionConsumerSideOffsetStoreHandler(initializeOffsets), SimpleJdbcTestUtils.getTransactioncontextHandler(), 0, false);
+
+        normalResults.stream().forEach(future -> {
+            try {
+                future.get();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (ExecutionException e) {
+                e.printStackTrace();
+            }
+        });
+        try {
+            slowResults.get(0).get();
+            fail();
+        } catch (Exception e) {
+            if (e.getCause().getClass().equals(OffsetStoreValidationException.class) == false) {
+                fail();
+            }
+        }
+
+        Map<TopicPartition, Long> assetOffsets = new HashMap<>();
+        assetOffsets.put(new TopicPartition(topicName, 0), 1L);
+        assetOffsets.put(new TopicPartition(topicName, 1), 1L);
+        assetOffsets.put(new TopicPartition(topicName, 2), 1L);
+        assetOffsets.put(new TopicPartition(topicName, 3), 1L);
+        assetOffsets.put(new TopicPartition(topicName, 4), 1L);
+        SimpleJdbcTestUtils.assertOffsets(this.embeddedKafkaBroker, GROUP, assetOffsets);
+    }
+
+    @Test
+    public void testHeartbeatSessionTimeout() throws Exception {
+        SimpleJdbcTestUtils.initializeDatabase();
+
+        String topicName = new Object() {
+        }.getClass().getEnclosingMethod().getName().toLowerCase(Locale.ROOT);
+        this.embeddedKafkaBroker.addTopics(topicName);
+
+        int messageCount = 5;
+
+        KafkaProducer<Integer, Integer> producer = TestUtils.getSimpleKafkaProducer(embeddedKafkaBroker);
+        for (int i = 0; i < messageCount; ++i) {
+            producer.send(new ProducerRecord<Integer, Integer>(topicName, i % PARTITION, i)).get();
+        }
+        producer.close();
+
+        final Map<String, Object> consumerProps = KafkaTestUtils
+                .consumerProps(GROUP, "false", embeddedKafkaBroker);
+        consumerProps.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
+        consumerProps.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+
+        Map<String, Object> offsetStoreProps = new HashMap<>();
+
+        Map<TopicPartition, OffsetAndMetadata> initializeOffsets = new HashMap<TopicPartition, OffsetAndMetadata>();
+        initializeOffsets.put(new TopicPartition(topicName, 0), new OffsetAndMetadata(0));
+
+        List<Future> slowResults = TestUtils.consumeMessages(messageCount, GROUP, topicName, 1, consumerProps, offsetStoreProps, new SimpleJdbcTestUtils.ConnectionConsumerSideOffsetStoreHandler(initializeOffsets), SimpleJdbcTestUtils.getTransactioncontextHandler((connection, kafkaConsumer) -> {
+            KafkaConsumerUtils.expireHeartbeatTime(kafkaConsumer); // sessionTimeout
         }), 0, false);
 
         List<Future> normalResults = TestUtils.consumeMessages(messageCount, GROUP, topicName, 5, consumerProps, offsetStoreProps, new SimpleJdbcTestUtils.ConnectionConsumerSideOffsetStoreHandler(initializeOffsets), SimpleJdbcTestUtils.getTransactioncontextHandler(), 0, false);
@@ -510,13 +570,6 @@ public class OffsetStoreContextTest {
 
         Map<String, Object> offsetStoreProps = new HashMap<>();
 
-        Map<TopicPartition, OffsetAndMetadata> initializeOffsets = new HashMap<TopicPartition, OffsetAndMetadata>();
-        initializeOffsets.put(new TopicPartition(topicName, 0), new OffsetAndMetadata(0));
-        initializeOffsets.put(new TopicPartition(topicName, 1), new OffsetAndMetadata(0));
-        initializeOffsets.put(new TopicPartition(topicName, 2), new OffsetAndMetadata(0));
-        initializeOffsets.put(new TopicPartition(topicName, 3), new OffsetAndMetadata(0));
-        initializeOffsets.put(new TopicPartition(topicName, 4), new OffsetAndMetadata(0));
-
         try (KafkaConsumer<Integer, String> kafkaConsumer = new KafkaConsumer<>(consumerProps)) {
             OffsetStoreContext offsetStoreContext = OffsetStoreContext.subscribe(offsetStoreProps, kafkaConsumer, Pattern.compile(topicName), new NoOpConsumerSideOffsetStoreHandler());
             kafkaConsumer.poll(Duration.ofSeconds(5));
@@ -614,5 +667,129 @@ public class OffsetStoreContextTest {
         Assertions.assertTrue(mockedAppender.isMessageIncluded("The offsets for assigned TopicPartition cannot be found in your loadOffset results"));
     }
 
+    @Test
+    public void testExecutionExceptionInItializeOffsetStore() throws Throwable {
+        SimpleJdbcTestUtils.initializeDatabase();
 
+        String topicName = new Object() {
+        }.getClass().getEnclosingMethod().getName().toLowerCase(Locale.ROOT);
+        this.embeddedKafkaBroker.addTopics(topicName);
+
+        int messageCount = 50;
+
+        KafkaProducer<Integer, Integer> producer = TestUtils.getSimpleKafkaProducer(embeddedKafkaBroker);
+        for (int i = 0; i < messageCount; ++i) {
+            producer.send(new ProducerRecord<Integer, Integer>(topicName, i % PARTITION, i)).get();
+        }
+        producer.close();
+
+        final Map<String, Object> consumerProps = KafkaTestUtils
+                .consumerProps(GROUP, "false", embeddedKafkaBroker);
+        consumerProps.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
+        consumerProps.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+
+        Map<String, Object> offsetStoreProps = new HashMap<>();
+
+        try (KafkaConsumer<Integer, String> kafkaConsumer = new KafkaConsumer<>(consumerProps)) {
+            try {
+                OffsetStoreContext offsetStoreContext = OffsetStoreContext.subscribe(offsetStoreProps, kafkaConsumer, Collections.singletonList(topicName), new NoOpConsumerSideOffsetStoreHandler() {
+                    @Override
+                    public void initializeOffsetStore(String groupId) throws Exception {
+                        throw new RuntimeException("Exception in initializeOffsetStore"); // throw Exception in initializeOffsetStore
+                    }
+                });
+                fail();
+            } catch (OffsetStoreExecutionException e) {
+                if ("Exception in initializeOffsetStore".equals(e.getCause().getMessage()) == false) {
+                    fail();
+                }
+            }
+        }
+    }
+
+    @Test
+    public void testExecutionExceptionInLoadOffsets() throws Throwable {
+        SimpleJdbcTestUtils.initializeDatabase();
+
+        String topicName = new Object() {
+        }.getClass().getEnclosingMethod().getName().toLowerCase(Locale.ROOT);
+        this.embeddedKafkaBroker.addTopics(topicName);
+
+        int messageCount = 50;
+
+        KafkaProducer<Integer, Integer> producer = TestUtils.getSimpleKafkaProducer(embeddedKafkaBroker);
+        for (int i = 0; i < messageCount; ++i) {
+            producer.send(new ProducerRecord<Integer, Integer>(topicName, i % PARTITION, i)).get();
+        }
+        producer.close();
+
+        final Map<String, Object> consumerProps = KafkaTestUtils
+                .consumerProps(GROUP, "false", embeddedKafkaBroker);
+        consumerProps.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
+        consumerProps.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+
+        Map<String, Object> offsetStoreProps = new HashMap<>();
+
+        try (KafkaConsumer<Integer, String> kafkaConsumer = new KafkaConsumer<>(consumerProps)) {
+            try {
+                OffsetStoreContext offsetStoreContext = OffsetStoreContext.subscribe(offsetStoreProps, kafkaConsumer, Collections.singletonList(topicName), new NoOpConsumerSideOffsetStoreHandler() {
+                    @Override
+                    public Map<TopicPartition, OffsetAndMetadata> loadOffsets(ConsumerGroupMetadata groupMetadata, Collection collection) throws Exception {
+                        throw new RuntimeException("Exception in loadOffsets"); // throw Exception in initializeOffsetStore
+                    }
+                });
+                kafkaConsumer.poll(Duration.ofSeconds(5));
+                fail();
+            } catch (KafkaException e) {
+                if ("Exception in loadOffsets".equals(e.getCause().getCause().getMessage()) == false) {
+                    fail();
+                }
+            }
+        }
+    }
+
+    @Test
+    public void testExecutionExceptionInSaveOffsets() throws Throwable {
+        SimpleJdbcTestUtils.initializeDatabase();
+
+        String topicName = new Object() {
+        }.getClass().getEnclosingMethod().getName().toLowerCase(Locale.ROOT);
+        this.embeddedKafkaBroker.addTopics(topicName);
+
+        int messageCount = 50;
+
+        KafkaProducer<Integer, Integer> producer = TestUtils.getSimpleKafkaProducer(embeddedKafkaBroker);
+        for (int i = 0; i < messageCount; ++i) {
+            producer.send(new ProducerRecord<Integer, Integer>(topicName, i % PARTITION, i)).get();
+        }
+        producer.close();
+
+        final Map<String, Object> consumerProps = KafkaTestUtils
+                .consumerProps(GROUP, "false", embeddedKafkaBroker);
+        consumerProps.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
+        consumerProps.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+
+        Map<String, Object> offsetStoreProps = new HashMap<>();
+
+        try (KafkaConsumer<Integer, String> kafkaConsumer = new KafkaConsumer<>(consumerProps)) {
+            try {
+                OffsetStoreContext offsetStoreContext = OffsetStoreContext.subscribe(offsetStoreProps, kafkaConsumer, Collections.singletonList(topicName), new NoOpConsumerSideOffsetStoreHandler() {
+                    @Override
+                    public void saveOffsets(ConsumerGroupMetadata groupMetadata, Map offsets, Object transactionalObject) throws Exception {
+                        throw new RuntimeException("Exception in saveOffsets"); // throw Exception in initializeOffsetStore
+                    }
+                });
+                ConsumerRecords<Integer, String> records = kafkaConsumer.poll(Duration.ofSeconds(5));
+                for (ConsumerRecord<Integer, String> record: records) {
+                    offsetStoreContext.updateConsumerSideOffsets(record, null);
+                }
+
+                fail();
+            } catch (OffsetStoreExecutionException e) {
+                if ("Exception in saveOffsets".equals(e.getCause().getMessage()) == false) {
+                    fail();
+                }
+            }
+        }
+    }
 }

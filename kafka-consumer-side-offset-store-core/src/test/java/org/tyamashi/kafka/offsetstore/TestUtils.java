@@ -60,7 +60,7 @@ public class TestUtils {
                                 try (TRANSACTIONALOBJECT transactionalObject = transactioncontextHandler.getTransactionalObject()) {
 
                                     // something to execute in business logic
-                                    transactioncontextHandler.doSomething(transactionalObject);
+                                    transactioncontextHandler.doSomething(transactionalObject, kafkaConsumer);
 
                                     if (enableRandomExceptin && random.nextInt(15) == 0) {
                                         throw new ExceptionForTest();
@@ -117,7 +117,7 @@ public class TestUtils {
 
         void commit(TRANSACTIONALOBJECT transactionalObject) throws Exception;
 
-        void doSomething(TRANSACTIONALOBJECT transactionalObject) throws Exception;
+        void doSomething(TRANSACTIONALOBJECT transactionalObject, KafkaConsumer kafkaConsumer) throws Exception;
     }
 
     public static AdminClient getAdminClient(EmbeddedKafkaBroker embeddedKafkaBroker) {

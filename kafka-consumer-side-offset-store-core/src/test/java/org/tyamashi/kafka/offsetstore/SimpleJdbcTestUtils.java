@@ -6,6 +6,7 @@
 package org.tyamashi.kafka.offsetstore;
 
 import org.apache.kafka.clients.consumer.ConsumerGroupMetadata;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
 import org.slf4j.Logger;
@@ -17,7 +18,7 @@ import java.sql.*;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -79,10 +80,10 @@ public class SimpleJdbcTestUtils {
     }
 
     public static TestUtils.TransactionalObjectHandler<Connection> getTransactioncontextHandler() {
-        return getTransactioncontextHandler(x->{});
+        return getTransactioncontextHandler((x, y)->{});
     }
 
-    public static TestUtils.TransactionalObjectHandler<Connection> getTransactioncontextHandler(Consumer<Connection> doSomething) {
+    public static TestUtils.TransactionalObjectHandler<Connection> getTransactioncontextHandler(BiConsumer<Connection, KafkaConsumer> doSomething) {
         return new TestUtils.TransactionalObjectHandler<Connection>() {
         @Override
         public Connection getTransactionalObject() throws Exception {
@@ -90,8 +91,8 @@ public class SimpleJdbcTestUtils {
         }
 
         @Override
-        public void doSomething(Connection transactionalObject) {
-            doSomething.accept(transactionalObject);
+        public void doSomething(Connection transactionalObject, KafkaConsumer kafkaConsumer) {
+            doSomething.accept(transactionalObject, kafkaConsumer);
         }
 
         @Override
